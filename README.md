@@ -1,6 +1,6 @@
 # Manga-Localizer
 AI-assisted manga localization workstation focused on high-quality Vietnamese translation, context-aware dialogue adaptation, and professional manga typesetting.
-
+```text
 Manga-Localizer/
 │
 ├── app/                          # Application bootstrap & orchestration layer
@@ -169,7 +169,7 @@ Manga-Localizer/
 ├── README.md                     # Project documentation
 ├── .gitignore                    # Git ignore rules
 └── .env                          # Environment variables & API keys
-
+```
 
 # Directory Overview
 | Directory   | Purpose                                                   |
