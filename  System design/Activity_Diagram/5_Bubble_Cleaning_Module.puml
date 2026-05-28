@@ -1,0 +1,32 @@
+@startuml Bubble Cleaning Module
+
+title Bubble Cleaning Module
+
+skinparam linetype ortho
+skinparam shadowing false
+
+|Rendering System|
+
+start
+
+:Load bubble mask;
+:Expand selection mask;
+:Phân tích vùng nền;
+
+if (Background đơn giản?) then (có)
+
+    :Content-aware fill;
+
+else (không)
+
+    :Hybrid inpainting;
+    :Refine cleanup edges;
+
+endif
+
+:Kiểm tra artifact;
+:Render cleaned page;
+
+stop
+
+@enduml

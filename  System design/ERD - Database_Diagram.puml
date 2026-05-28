@@ -1,0 +1,95 @@
+@startuml Manga-Localizer SQLite Database ERD
+
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+title Manga-Localizer SQLite Database ERD
+
+entity "projects" as projects {
+
+    *id : UUID <<PK>>
+    --
+    project_name : VARCHAR
+    created_at : DATETIME
+    last_accessed : DATETIME
+    config_file_path : VARCHAR
+}
+
+entity "manga_pages" as manga_pages {
+
+    *id : UUID <<PK>>
+    --
+    project_id : UUID <<FK>>
+    page_number : INT
+    raw_image_path : VARCHAR
+    cleaned_image_path : VARCHAR
+    status : VARCHAR
+}
+
+entity "text_bubbles" as text_bubbles {
+
+    *id : UUID <<PK>>
+    --
+    page_id : UUID <<FK>>
+    bounding_box_x : INT
+    bounding_box_y : INT
+    bounding_box_w : INT
+    bounding_box_h : INT
+    reading_order : INT
+    detected_raw_text : TEXT
+    current_translated_text : TEXT
+}
+
+entity "translation_history" as translation_history {
+
+    *id : UUID <<PK>>
+    --
+    bubble_id : UUID <<FK>>
+    input_raw_text : TEXT
+    output_translated_text : TEXT
+    applied_prompt : TEXT
+    timestamp : DATETIME
+}
+
+entity "character_profiles" as character_profiles {
+
+    *id : UUID <<PK>>
+    --
+    project_id : UUID <<FK>>
+    canonical_name : VARCHAR
+    personality_traits : TEXT
+    speech_style_config : TEXT
+}
+
+entity "character_relationships" as character_relationships {
+
+    *id : INT <<PK>>
+    --
+    project_id : UUID <<FK>>
+    character_id_1 : UUID <<FK>>
+    character_id_2 : UUID <<FK>>
+    relationship_type : VARCHAR
+    last_updated : DATETIME
+}
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+projects ||--|{ manga_pages : contains
+
+manga_pages ||--|{ text_bubbles : includes
+
+text_bubbles ||--o{ translation_history : stores
+
+projects ||--o{ character_profiles : owns
+
+projects ||--o{ character_relationships : manages
+
+character_profiles ||--o{ character_relationships : source_character
+
+character_profiles ||--o{ character_relationships : target_character
+
+@enduml

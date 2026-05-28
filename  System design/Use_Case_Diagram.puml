@@ -1,0 +1,86 @@
+@startuml Manga-Localizer Use Case Diagram
+
+title Manga-Localizer Use Case Diagram
+
+skinparam linetype polyline
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+' ----- ACTORS -----
+' Tác nhân con người nằm cố định bên trái
+actor "Người dùng" as User
+
+' Ép hai tác nhân hệ thống nằm độc lập ở cột biên bên PHẢI
+actor "MangaOCR Engine" as OCR <<Application>>
+actor "Gemini API" as Gemini <<Application>>
+
+' ----- MAIN SYSTEM -----
+rectangle "Manga-Localizer System" {
+    
+    rectangle "OCR Workflow" {
+        usecase "Quét OCR Manga" as UC_OCR
+        usecase "Xác định Reading Order" as UC_ReadOrder
+        usecase "Phát hiện Bubble" as UC_DetectBubble
+        usecase "Theo dõi tiến trình OCR" as UC_TrackOCR
+    }
+
+    rectangle "Project Management" {
+        usecase "Tạo dự án mới" as UC_CreateProj
+        usecase "Import Manga Pages" as UC_Import
+        usecase "Quản lý dự án" as UC_ManageProj
+    }
+    
+    rectangle "Translation & Localization" {
+        usecase "Dịch hội thoại" as UC_Translate
+        usecase "Kiểm tra Translation Consistency" as UC_Consistency
+        usecase "Theo dõi Translation Queue" as UC_TrackQueue
+    }
+    
+    rectangle "Typography & Bubble Editing" {
+        usecase "Chỉnh sửa Bubble" as UC_EditBubble
+        usecase "Chỉnh sửa Layout thủ công" as UC_ManualLayout
+        usecase "Điều chỉnh Font thủ công" as UC_ManualFont
+        usecase "Preview Render" as UC_Preview
+        usecase "Điều chỉnh Typography" as UC_Typography
+    }
+    
+    rectangle "Rendering & Export" {
+        usecase "Render Manga Page" as UC_Render
+        usecase "Export PNG/PDF" as UC_Export
+    }
+}
+
+' ----- USER CONNECTIONS -----
+User ---> UC_OCR
+User ---> UC_TrackOCR
+
+User ---> UC_CreateProj
+User ---> UC_Import
+User ---> UC_ManageProj
+
+User ---> UC_Translate
+User ---> UC_TrackQueue
+
+User ---> UC_EditBubble
+
+User ---> UC_Render
+User ---> UC_Export
+
+' ----- INTERNAL RELATIONS -----
+UC_OCR ..> UC_ReadOrder : <<include>>
+UC_OCR ..> UC_DetectBubble : <<include>>
+
+UC_Translate ..> UC_Consistency : <<include>>
+
+UC_ManualLayout ..> UC_EditBubble : <<extend>>
+UC_ManualFont ..> UC_EditBubble : <<extend>>
+
+UC_EditBubble ..> UC_Preview : <<include>>
+UC_EditBubble ..> UC_Typography : <<include>>
+
+' ----- API CONNECTIONS (Ép đi sang ngang bên phải, chặn hoàn toàn lỗi chéo dây) -----
+UC_OCR -right-> OCR
+UC_Translate -right-> Gemini
+
+@endum

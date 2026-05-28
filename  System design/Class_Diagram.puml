@@ -1,0 +1,326 @@
+@startuml Manga-Localizer System - Enterprise Class Diagram
+
+' ========================================================= 
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam packageStyle rect
+skinparam classAttributeIconSize 0
+
+title Manga-Localizer System - Enterprise Class Diagram
+
+' =========================================================
+' PROJECT LIFECYCLE MODULE
+' =========================================================
+
+package "Project Lifecycle Module" {
+
+    class ProjectController {
+        - DatabaseManager databaseManager
+        - CacheManager cacheManager
+        - ProjectMetadata currentProject
+        + initProjectStructure(projectName: String): FolderStructure
+        + loadMetadata(projectId: UUID): ProjectMetadata
+        + openProject(projectId: UUID): Boolean
+        + saveProject(projectId: UUID): Boolean
+        + restoreSession(): UserSession
+    }
+
+    class ProjectMetadata {
+        + UUID projectId
+        + String projectName
+        + String projectPath
+        + DateTime createdAt
+        + DateTime updatedAt
+        + Int totalPages
+        + Boolean initialized
+    }
+
+    class DatabaseManager {
+        - String databasePath
+        - String activeConnection
+        + establishSQLiteConnection(): Boolean
+        + executeQuery(query: String): QueryResult
+        + beginTransaction(): Boolean
+        + commitTransaction(): Boolean
+        + rollbackTransaction(): Boolean
+    }
+
+    class CacheManager {
+        - Map<String, Object> cacheRegistry
+        + initializeCache(): void
+        + storeCache(key: String, value: Object): Boolean
+        + retrieveCache(key: String): Object
+        + clearCache(key: String): Boolean
+    }
+}
+
+' =========================================================
+' OCR PIPELINE MODULE
+' =========================================================
+
+package "OCR Pipeline Module" {
+
+    class OCRWorkflowController {
+        - ImageValidator imageValidator
+        - BubbleDetector bubbleDetector
+        - MangaOCREngineClient ocrClient
+        + executeOCRWorkflow(pageId: UUID): Promise<OCRResult>
+        + determineReadingOrder(bubbles: List<Bubble>): List<Bubble>
+        + saveOCRResult(result: OCRResult): Boolean
+    }
+
+    class ImageValidator {
+        + validateFormat(path: String): Boolean
+        + preprocessImage(img: Mat): Mat
+        + normalizeResolution(img: Mat): Mat
+        + detectCorruptedImage(path: String): Boolean
+    }
+
+    class BubbleDetector {
+        + async detectContours(img: Mat): List<Contour>
+        + generateBubbleMask(contour: Contour): Mask
+        + classifyBubbleType(contour: Contour): BubbleType
+    }
+
+    class MangaOCREngineClient {
+        - String endpoint
+        - Int timeout
+        + async dispatchOCRRequest(img: Mat): Promise<String>
+        + async batchOCRRequests(images: List<Mat>): Promise<List<String>>
+        + validateOCRResponse(response: String): Boolean
+    }
+}
+
+' =========================================================
+' TRANSLATION PIPELINE MODULE
+' =========================================================
+
+package "Translation Pipeline Module" {
+
+    class TranslationCoordinator {
+        - PromptEngineer promptEngineer
+        - GeminiAPIClient geminiApiClient
+        + loadOCRData(projId: UUID): List<OCRText>
+        + buildTranslationContext(projId: UUID): TranslationContext
+        + async executeTranslation(chapterId: UUID): Promise<TranslationBatch>
+        + monitorTranslationQueue(): QueueStatus
+        + saveTranslationResult(batch: TranslationBatch): Boolean
+    }
+
+    class PromptEngineer {
+        + chunkSemanticPhrases(text: String): List<String>
+        + buildLocalizationPrompt(context: TranslationContext): String
+        + injectCharacterMemory(prompt: String): String
+        + optimizeTokenUsage(prompt: String): String
+    }
+
+    class GeminiAPIClient {
+        - String apiKey
+        - String endpoint
+        + async sendTranslationRequest(prompt: String): Promise<String>
+        + async batchTranslate(prompts: List<String>): Promise<List<String>>
+        + validateResponse(response: String): Boolean
+    }
+}
+
+' =========================================================
+' BUBBLE TYPOGRAPHY MODULE
+' =========================================================
+
+package "Bubble Typography Module" {
+
+    class TypographyEngine {
+        - TextLayoutConfig activeLayout
+        + loadFontAssets(style: String): Font
+        + generateLineBreakCandidates(text: String, shape: Geometry): List<String>
+        + calculateReadabilityScore(layout: TextLayoutConfig): Float
+        + selectOptimalLayout(): TextLayoutConfig
+        + regenerateLayout(text: String, font: Font): TextLayoutConfig
+        + renderPreview(): Image
+    }
+
+    class TextLayoutConfig {
+        + String fontFamily
+        + Int fontSize
+        + Float lineSpacing
+        + Float readabilityScore
+        + Rectangle textBounds
+        + Boolean overflowDetected
+    }
+
+    class ManualEditController {
+        - TypographyEngine typographyEngine
+        + decreaseFontSize(step: Int): Int
+        + moveTextPosition(offsetX: Float, offsetY: Float): Boolean
+        + adjustLineBreaks(layout: TextLayoutConfig): TextLayoutConfig
+        + triggerRecursiveFontResize(layout: TextLayoutConfig): TextLayoutConfig
+        + saveManualAdjustment(): Boolean
+    }
+}
+
+' =========================================================
+' BUBBLE CLEANING MODULE
+' =========================================================
+
+package "Bubble Cleaning Module" {
+
+    class CleaningProcessor {
+        - MaskManager maskManager
+        - InpaintingEngine inpaintingEngine
+        + analyzeBackgroundType(region: Mat): BackgroundType
+        + refineCleanupEdges(img: Mat): Mat
+        + checkArtifacts(img: Mat): List<Artifact>
+        + generateCleanPage(pageId: UUID): Promise<Mat>
+    }
+
+    class MaskManager {
+        + loadBubbleMask(pageId: UUID): Mask
+        + expandSelectionMask(mask: Mask, pixels: Int): Mask
+        + mergeMasks(masks: List<Mask>): Mask
+        + saveMask(mask: Mask): Boolean
+    }
+
+    class InpaintingEngine {
+        + contentAwareFill(region: Mat): Mat
+        + async hybridInpainting(region: Mat): Promise<Mat>
+        + reconstructTexture(region: Mat): Mat
+        + validateInpaintingResult(img: Mat): Boolean
+    }
+}
+
+' =========================================================
+' FINAL RENDERING MODULE
+' =========================================================
+
+package "Final Rendering Module" {
+
+    class BatchRenderingEngine {
+        - PageCompositor pageCompositor
+        - ExportManager exportManager
+        + async renderChapter(chapterId: UUID): Promise<RenderBatch>
+        + generatePageThumbnail(page: Mat): Image
+        + validateRenderOutput(page: Mat): Boolean
+    }
+
+    class PageCompositor {
+        + applyEmotionTypography(text: String, emotion: ToneType): StyledText
+        + compositeFinalPage(cleanedPage: Mat, layout: TextLayoutConfig): Mat
+        + blendTextLayer(page: Mat, styledText: StyledText): Mat
+        + generatePreview(page: Mat): Image
+    }
+
+    class ExportManager {
+        + async exportToPNGSequence(chapterId: UUID): Promise<Path>
+        + async exportToPDFArchive(chapterId: UUID): Promise<Path>
+        + generateExportManifest(chapterId: UUID): ExportManifest
+        + validateExportIntegrity(path: Path): Boolean
+    }
+}
+
+' =========================================================
+' CHARACTER MEMORY MODULE
+' =========================================================
+
+package "Character Memory Module" {
+
+    class CharacterMemoryEngine {
+        - RelationshipGraph relationshipGraph
+        + loadDialogueHistory(charId: UUID): List<Dialogue>
+        + analyzePronouns(text: String): PronounContext
+        + analyzePunctuation(text: String): ToneType
+        + analyzeSpeechPattern(text: String): SpeechStyle
+        + verifyCharacterExistence(name: String): Boolean
+        + updateRelationshipGraph(graph: RelationshipGraph): void
+    }
+
+    class CharacterProfile {
+        + UUID characterId
+        + String characterName
+        + SpeechStyle speechStyle
+        + PronounContext pronounContext
+        + ToneType dominantTone
+    }
+
+    class RelationshipGraph {
+        + Map<UUID, CharacterProfile> characterNodes
+        + Map<UUID, List<UUID>> relationshipEdges
+        + addRelationship(sourceId: UUID, targetId: UUID): Boolean
+        + removeRelationship(sourceId: UUID, targetId: UUID): Boolean
+        + resolveRelationship(sourceId: UUID, targetId: UUID): RelationshipType
+    }
+}
+
+' =========================================================
+' TRANSLATION CONSISTENCY MODULE
+' =========================================================
+
+package "Translation Consistency Module" {
+
+    class ConsistencyValidator {
+        - TerminologyCache terminologyCache
+        + comparePronouns(target: String, context: PronounContext): Boolean
+        + verifyNamingConsistency(entity: String): Boolean
+        + analyzeSpeechStyleMatch(text: String, profile: SpeechStyle): Boolean
+        + detectConflicts(): List<ConflictWarning>
+        + suggestCorrection(warn: ConflictWarning): String
+        + applyCorrection(text: String): void
+        + saveConsistencyState(): Boolean
+    }
+
+    class TerminologyCache {
+        + Map<String, String> terminologyMap
+        + addTerm(source: String, translated: String): Boolean
+        + resolveTerm(source: String): String
+        + validateConsistency(source: String): Boolean
+        + exportDictionary(): Dictionary
+    }
+}
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+ProjectController *-- ProjectMetadata
+ProjectController *-- DatabaseManager
+ProjectController *-- CacheManager
+
+OCRWorkflowController *-- ImageValidator
+OCRWorkflowController *-- BubbleDetector
+OCRWorkflowController *-- MangaOCREngineClient
+
+TranslationCoordinator *-- PromptEngineer
+TranslationCoordinator *-- GeminiAPIClient
+
+TypographyEngine *-- TextLayoutConfig
+ManualEditController --> TypographyEngine
+
+CleaningProcessor *-- MaskManager
+CleaningProcessor *-- InpaintingEngine
+
+BatchRenderingEngine *-- PageCompositor
+BatchRenderingEngine *-- ExportManager
+
+CharacterMemoryEngine *-- RelationshipGraph
+RelationshipGraph o-- CharacterProfile
+
+ConsistencyValidator *-- TerminologyCache
+
+TranslationCoordinator --> CharacterMemoryEngine
+TranslationCoordinator --> ConsistencyValidator
+
+TypographyEngine --> CharacterProfile
+PageCompositor --> TextLayoutConfig
+
+CleaningProcessor --> OCRWorkflowController
+BatchRenderingEngine --> CleaningProcessor
+
+DatabaseManager o-- OCRWorkflowController
+DatabaseManager o-- TranslationCoordinator
+DatabaseManager o-- CharacterMemoryEngine
+DatabaseManager o-- ConsistencyValidator
+
+CacheManager o-- TranslationCoordinator
+CacheManager o-- BatchRenderingEngine
+
+@enduml

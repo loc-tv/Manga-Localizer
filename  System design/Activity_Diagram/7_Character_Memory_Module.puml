@@ -1,0 +1,33 @@
+@startuml Character Memory Module
+
+title Character Memory Module
+
+skinparam linetype ortho
+skinparam shadowing false
+
+|Translation System|
+
+start
+
+:Load dialogue history;
+:Phân tích pronouns;
+:Phân tích punctuation;
+:Phân tích speech pattern;
+
+if (Character đã tồn tại?) then (có)
+
+    :Cập nhật personality profile;
+    :Cập nhật relationship graph;
+
+else (không)
+
+    :Tạo character profile mới;
+
+endif
+
+:Generate speaking style profile;
+:Lưu character memory;
+
+stop
+
+@enduml

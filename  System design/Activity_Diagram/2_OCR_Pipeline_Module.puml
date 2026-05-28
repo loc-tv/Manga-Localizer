@@ -1,0 +1,51 @@
+@startuml OCR Pipeline Module
+
+title OCR Pipeline Module
+
+skinparam linetype ortho
+skinparam shadowing false
+
+|Người dùng|
+
+start
+
+:Import manga pages;
+
+repeat
+
+    :Chọn ảnh RAW;
+
+    |OCR System|
+
+    :Kiểm tra định dạng;
+    :Tiền xử lý ảnh;
+    :Detect Bubble contours;
+
+repeat while (Ảnh hợp lệ?) is ([không]) not ([có])
+
+fork
+
+    :Hiển thị OCR progress;
+
+fork again
+
+    |MangaOCR Engine|
+
+    :OCR tiếng Nhật;
+    :Trả kết quả OCR;
+
+end fork
+
+|OCR System|
+
+:Phân tích Reading Order;
+:Tạo Bubble objects;
+:Lưu OCR result vào SQLite;
+
+|Người dùng|
+
+:Xem OCR overlay;
+
+stop
+
+@enduml

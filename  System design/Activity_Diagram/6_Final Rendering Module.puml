@@ -1,0 +1,45 @@
+@startuml Final Rendering Module
+
+title Final Rendering Module
+
+skinparam linetype ortho
+skinparam shadowing false
+
+|Người dùng|
+
+start
+
+:Chọn render chapter;
+
+|Rendering Engine|
+
+:Load cleaned pages;
+:Load typography layouts;
+:Load font assets;
+
+repeat
+
+    :Render translated text;
+    :Áp emotion typography;
+    :Composite final page;
+    :Sinh preview thumbnail;
+
+repeat while (Còn page chưa render?) is (có) not (không)
+
+fork
+
+    :Export PNG sequence;
+
+fork again
+
+    :Export PDF archive;
+
+end fork
+
+|Người dùng|
+
+:Xem export result;
+
+stop
+
+@enduml

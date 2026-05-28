@@ -1,0 +1,48 @@
+@startuml Translation Pipeline Module
+
+title Translation Pipeline Module
+
+skinparam linetype ortho
+skinparam shadowing false
+
+|Người dùng|
+
+start
+
+:Chọn chapter để dịch;
+
+|Translation System|
+
+:Load OCR dữ liệu;
+:Phân tích scene context;
+:Phân tích character speaking style;
+:Tạo translation chunks;
+:Tạo prompt localization;
+
+fork
+
+    :Hiển thị translation progress;
+
+fork again
+
+    |Gemini API|
+
+    :Nhận translation request;
+    :Dịch hội thoại;
+    :Trả translation response;
+
+end fork
+
+|Translation System|
+
+:Kiểm tra consistency;
+:Cập nhật character memory;
+:Lưu translation vào SQLite;
+
+|Người dùng|
+
+:Xem translation result;
+
+stop
+
+@enduml

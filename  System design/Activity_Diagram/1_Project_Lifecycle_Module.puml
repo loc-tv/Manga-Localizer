@@ -1,0 +1,45 @@
+@startuml Project Lifecycle Module
+
+title Project Lifecycle Module
+
+skinparam linetype ortho
+skinparam shadowing false
+
+|Người dùng|
+
+start
+
+:Khởi động ứng dụng;
+:Chọn tạo hoặc mở project;
+
+if (Project đã tồn tại?) then (có)
+
+    :Chọn project;
+
+    |Manga-Localizer System|
+
+    :Đọc project metadata;
+    :Kết nối SQLite;
+    :Load cache;
+    :Khôi phục session;
+
+else (không)
+
+    :Nhập tên project;
+
+    |Manga-Localizer System|
+
+    :Tạo cấu trúc thư mục;
+    :Khởi tạo SQLite;
+    :Tạo config mặc định;
+    :Khởi tạo cache;
+
+endif
+
+|Người dùng|
+
+:Xem dashboard project;
+
+stop
+
+@enduml

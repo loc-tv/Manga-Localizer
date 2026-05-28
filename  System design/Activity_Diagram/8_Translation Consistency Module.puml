@@ -1,0 +1,35 @@
+@startuml Translation Consistency Module
+
+title Translation Consistency Module
+
+skinparam linetype ortho
+skinparam shadowing false
+
+|Translation System|
+
+start
+
+:Load translation history;
+:Load character memory;
+:Load terminology cache;
+
+:So sánh pronouns;
+:So sánh naming consistency;
+:So sánh speech style;
+
+if (Conflict detected?) then (có)
+
+    :Sinh consistency warning;
+    :Đề xuất correction;
+
+else (không)
+
+    :Approve translation;
+
+endif
+
+:Lưu consistency state;
+
+stop
+
+@enduml

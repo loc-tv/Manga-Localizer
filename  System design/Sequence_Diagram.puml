@@ -1,0 +1,137 @@
+@startuml Manga-Localizer System - Translation & Consistency Flow
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam sequence {
+    ArrowColor #4A6FA5
+    LifeLineBorderColor #777777
+    LifeLineBackgroundColor #EFEFEF
+    ParticipantBorderColor #4A6FA5
+    ParticipantBackgroundColor #EAF4FF
+    ActorBorderColor #444444
+    ActorBackgroundColor #FFF4D6
+}
+
+title Manga-Localizer System - Translation & Consistency Flow
+
+actor "User / Editor" as User
+boundary "UI / Dashboard" as UI
+control "TranslationCoordinator" as Coordinator
+control "PromptEngineer" as PromptEng
+entity "GeminiAPIClient" as Gemini <<External>>
+control "ConsistencyValidator" as Validator
+entity "TerminologyCache" as TermCache
+control "CharacterMemoryEngine" as MemoryEng
+database "DatabaseManager (SQLite)" as DB
+
+== Translation Request ==
+
+User -> UI : Click "Translate Chapter"
+activate UI
+
+UI -> Coordinator : loadOCRData(projectId: UUID)
+activate Coordinator
+
+Coordinator -> DB : fetchOCRTexts(projectId: UUID)
+activate DB
+DB --> Coordinator : List<OCRText>
+deactivate DB
+
+loop For each OCRText chunk
+
+    Coordinator -> PromptEng : analyzeSceneContext(text: OCRText)
+    activate PromptEng
+
+    PromptEng -> PromptEng : analyzeSpeechPattern(text: String)
+    PromptEng -> PromptEng : buildLocalizationPrompt()
+
+    PromptEng --> Coordinator : LocalizationPrompt
+    deactivate PromptEng
+
+    Coordinator ->> Gemini : async sendTranslationRequest(prompt: String)
+    activate Gemini
+
+    note right of Gemini
+        Async translation request
+        to external Gemini API
+    end note
+
+    Gemini -->> Coordinator : TranslatedText
+    deactivate Gemini
+
+    Coordinator -> Validator : detectConflicts(translatedText: String)
+    activate Validator
+
+    Validator -> TermCache : getTermMapping(entity: String)
+    activate TermCache
+    TermCache --> Validator : TermMapping
+    deactivate TermCache
+
+    Validator -> MemoryEng : generateSpeakingStyleProfile(characterId: UUID)
+    activate MemoryEng
+
+    MemoryEng -> MemoryEng : analyzePronouns(text: String)
+    MemoryEng -> MemoryEng : analyzeSpeechPattern(text: String)
+
+    MemoryEng --> Validator : SpeechStyleProfile
+    deactivate MemoryEng
+
+    Validator -> Validator : comparePronouns()
+    Validator -> Validator : verifyNamingConsistency()
+    Validator -> Validator : analyzeSpeechStyleMatch()
+
+    alt Conflict detected
+
+        Validator --> Coordinator : List<ConflictWarning>
+
+        Coordinator -> Validator : suggestCorrection(warning: ConflictWarning)
+
+        Validator -> Validator : generateCorrectionSuggestion()
+
+        Validator --> Coordinator : SuggestedCorrection
+
+        Coordinator -> UI : displayConsistencyWarning()
+        UI -> User : Render warning + suggestion
+
+        User -> UI : Approve correction
+        UI -> Coordinator : applyCorrection(correctedText: String)
+
+        Coordinator -> Validator : applyCorrection(correctedText: String)
+
+        Validator -> Validator : updateValidatedTranslation()
+
+    else No conflict
+
+        Validator --> Coordinator : ValidationPassed
+
+    end
+
+    Validator -> DB : saveConsistencyState()
+    activate DB
+    DB --> Validator : PersistenceSuccess
+    deactivate DB
+
+    Coordinator -> MemoryEng : updateRelationshipGraph()
+    activate MemoryEng
+
+    MemoryEng -> DB : persistCharacterMemory()
+    activate DB
+
+    DB --> MemoryEng : PersistenceSuccess
+    deactivate DB
+
+    MemoryEng --> Coordinator : MemoryUpdated
+    deactivate MemoryEng
+
+    Validator --> Coordinator : ValidationCompleted
+    deactivate Validator
+
+end
+
+Coordinator -> UI : renderTranslationPreview()
+deactivate Coordinator
+
+UI -> User : Display translated preview
+deactivate UI
+
+@enduml

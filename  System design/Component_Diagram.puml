@@ -1,0 +1,106 @@
+@startuml Manga-Localizer System - Enterprise Component Architecture
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title Manga-Localizer System - Enterprise Component Architecture
+
+actor "User / Editor" as User
+
+' =========================================================
+' PRESENTATION LAYER
+' =========================================================
+
+package "Presentation Layer" {
+
+    component "Desktop Dashboard UI" as DashboardUI <<Component>>
+
+    component "Manual Typography\nCanvas Editor" as CanvasEditor <<Component>>
+}
+
+' =========================================================
+' CORE APPLICATION LAYER
+' =========================================================
+
+package "Core Application Layer\n(Manga-Localizer System Domain)" {
+
+    component "Project & Database\nManager Component" as ProjectManager <<Component>>
+
+    component "Vision & Image\nProcessing Component" as VisionComponent <<Component>>
+
+    component "NLP Translation\nCoordinator Component" as NLPComponent <<Component>>
+
+    component "Typography & Layout\nEngine Component" as TypographyComponent <<Component>>
+}
+
+' =========================================================
+' INFRASTRUCTURE & EXTERNAL SERVICES
+' =========================================================
+
+package "Infrastructure & External Services Layer" {
+
+    database "SQLite Database File" as SQLiteDB <<Database>>
+
+    folder "Local Asset Cache\n& File Storage" as AssetCache
+
+    node "Google Gemini AI API" as GeminiAPI <<External API>>
+
+    node "MangaOCR Engine Server" as MangaOCR <<External Engine>>
+}
+
+' =========================================================
+' USER INTERACTIONS
+' =========================================================
+
+User --> DashboardUI : Manage projects\nTrigger workflows
+
+User --> CanvasEditor : Edit typography\nAdjust layout
+
+' =========================================================
+' PRESENTATION -> CORE
+' =========================================================
+
+DashboardUI --> ProjectManager : Project commands
+
+DashboardUI --> VisionComponent : OCR requests
+
+DashboardUI --> NLPComponent : Translation requests
+
+CanvasEditor --> TypographyComponent : Layout operations
+
+' =========================================================
+' INTERNAL CORE DEPENDENCIES
+' =========================================================
+
+NLPComponent --> ProjectManager : Load OCR context
+
+TypographyComponent --> ProjectManager : Load metadata
+
+VisionComponent --> ProjectManager : Persist OCR results
+
+TypographyComponent --> NLPComponent : Fetch translated text
+
+' =========================================================
+' DATABASE & STORAGE
+' =========================================================
+
+ProjectManager --> SQLiteDB : Read/write project data
+
+ProjectManager --> AssetCache : Manage cached assets
+
+TypographyComponent --> AssetCache : Load fonts\nLoad render assets
+
+VisionComponent --> AssetCache : Store processed pages
+
+' =========================================================
+' EXTERNAL SERVICE CONNECTIONS
+' =========================================================
+
+VisionComponent --> MangaOCR : HTTP/gRPC OCR requests
+
+NLPComponent --> GeminiAPI : HTTPS/REST translation prompts
+
+@enduml

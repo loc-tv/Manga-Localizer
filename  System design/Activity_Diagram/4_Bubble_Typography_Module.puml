@@ -1,0 +1,51 @@
+@startuml Bubble Typography Module
+
+title Bubble Typography Module
+
+skinparam linetype ortho
+skinparam shadowing false
+
+|Người dùng|
+
+start
+
+:Chọn bubble cần edit;
+
+|Typography Engine|
+
+:Load bubble contour;
+:Phân tích bubble shape;
+:Load translated text;
+
+:Chunk semantic phrases;
+:Generate line break candidates;
+:Phân tích readability score;
+:Chọn layout tối ưu;
+
+if (Bubble fit tốt?) then (có)
+
+    :Áp typography tự động;
+
+else (không)
+
+    :Giảm font size;
+    :Regenerate layout;
+
+endif
+
+:Render preview;
+
+|Người dùng|
+
+if (Cần chỉnh tay?) then (có)
+
+    :Kéo chỉnh layout;
+    :Điều chỉnh font thủ công;
+
+endif
+
+:Xem typography preview;
+
+stop
+
+@enduml
